@@ -8,6 +8,8 @@
   Author URI: http://orbisius.com
  */
 
+namespace ScorpioTek\WordPress\Util\Security;
+
 /**
 This needs to be saved to wp-content/mu-plugins/orbisius-wp-media-protector.php
 That way it will run automatically.
@@ -26,13 +28,49 @@ Add the following lines to the .htaccess file (usually in the root WP folder).
  * check for a given role before granting access e.g. editor or administrator
 */
 
-$prot_obj = new orbisius_wp_media_uploads_protector();
-add_action( 'init', [ $prot_obj, 'protect_uploads' ], 0 );
 
 /**
  * @author Svetoslav Marinov (SLAVI) | http://orbisius.com
  */
-class orbisius_wp_media_uploads_protector {
+class MediaUploadProtector {
+
+    private $secret_folder_path;
+    private $secret_folder_name;
+
+    public function __construct( $secret_folder_path ) {
+        $this->set_secret_folder_path ( $secret_folder_path );
+        $this->set_secret_folder_name ( basename ( $secret_folder_path ) );
+    }
+
+    /**
+     * Setter for secret_folder_path
+     *
+     * @param string $secret_folder_path the new value of the secret_folder_path property.
+     */
+    public function set_secret_folder_path( $secret_folder_path ) {
+        $this->secret_folder_path = $secret_folder_path;
+    }
+    /**
+     * Getter for the secret_folder_path property.
+     */
+    public function get_secret_folder_path() {
+        return $this->secret_folder_path;
+    }
+
+    /**
+     * Setter for secret_folder_name
+     *
+     * @param string $secret_folder_name the new value of the secret_folder_name property.
+     */
+    public function set_secret_folder_name( $secret_folder_name ) {
+        $this->secret_folder_name = $secret_folder_name;
+    }
+    /**
+     * Getter for the secret_folder_name property.
+     */
+    public function get_secret_folder_name() {
+        return $this->secret_folder_name;
+    }
 
     function protect_uploads() {
         if ( ! empty( $_REQUEST['orbisius_media_protector'] ) ) {
@@ -60,9 +98,9 @@ class orbisius_wp_media_uploads_protector {
                 // Let's use this just in case.
                 nocache_headers();
     
-                $path = '~/Sites';
+                // $path = '~/Sites';
 
-                $file = $path . $req_file;
+                $file = $this->get_secret_folder_path();
 
                 if ( file_exists( $file ) ) {
                     $content_type = 'application/octet-stream';
@@ -124,7 +162,7 @@ class orbisius_wp_media_uploads_protector {
         $ok = 0;
         
         if ( ( strpos( $req_file, '..' ) === false ) 
-                && ( strpos( $req_file, 'ooA7QYKiBWe34i' ) !== false ) ) {
+                && ( strpos( $req_file, $this->get_secret_folder_name() ) !== false ) ) {
 
                 // && preg_match( '#^/_content/plugins/s2member-files/[\s\w\-\/\\\]+\.([a-z]{2,5})$#si', $req_file ) ) {
             $ok = 1;
